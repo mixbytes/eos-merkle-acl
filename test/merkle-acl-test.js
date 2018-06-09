@@ -52,12 +52,11 @@ common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
 			throw("Set code failed: " + e);
 		}
 
-		throw("FINISHED");
+	
+		let contract = null;
+		await eos.contract(params.owner).then(c => contract = c);
 
-
-		//let contract = null;
-		//eos.contract(params.owner).then(c => contract = c);
-		//console.log(contract);
+		console.log(contract);
 		/*
         try {                                                                                                                                                 
             let trx = await eos.transaction('eosio', (system) => {                                                                                            
