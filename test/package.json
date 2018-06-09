@@ -1,0 +1,11 @@
+{
+  "name": "eos-merkle-acl",
+  "version": "0.0.1",
+  "dependencies": {
+    "argparse": "^1.0.10",
+    "axios": "^0.18.0",
+    "binaryen": "^48.0.0",
+    "eosjs": "^14.0.0",
+    "fs": "0.0.1-security"
+  }
+}

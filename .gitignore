@@ -1,3 +1,9 @@
+# NodeJS files
+/test/node_modules/
+
+# Build subdir
+/build/
+
 # Prerequisites
 *.d
 
@@ -30,3 +36,5 @@
 *.exe
 *.out
 *.app
+
+
