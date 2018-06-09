@@ -3,7 +3,10 @@ const common = require('./common');
 const axios = require('axios');
 const Eos = require('eosjs');
 const fs = require('fs');
-var merkle = require('merkle');
+//const merkle = require('merkle');
+//const crypto = require('crypto');  
+const MerkleTree = require('./merkleTree');
+
 
 function makeid() {
   	var text = "";
@@ -19,7 +22,6 @@ function makeid() {
 common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
     .then(async (app) => {
 		const node_url = 'https://frodo.eosnode.smartz.io:18888';
-
 		let N=10;
 		let accounts_names = [];
 		let accounts = [];
@@ -38,7 +40,6 @@ common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
       		active: pub
     		});*/
 		}
-		let merkle_tree = await merkle('sha256').sync(accounts_names);
 
 		// [TODO] make all async normally, not like this shit		
         let getInfoResp = await axios.get(node_url+'/v1/chain/get_info').catch(function (error) {
@@ -101,33 +102,21 @@ common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
 		}
 	
 		let contract = null;
-		await eos.contract(contractUser).then(c => contract = c);
+		await ceos.contract(contractUser).then(c => contract = c);
 		await(console.log("Created user '" + accounts[0].name + "' with pubkey: " + accounts[0].pub + ", set merkle contract"));
 
-		// let proof = await merkle_tree.getProofPath(1);
-	
-		/*
-        try {                                                                                                                                                 
-            let trx = await eos.transaction('eosio', (system) => {                                                                                            
-                system.delegatebw({                                                                                                                           
-                    'from': params.name,                                                                                                                      
-                    'receiver': params.name,                                                                                                                  
-                    'stake_net_quantity': params.net,                                                                                                         
-                    'stake_cpu_quantity': params.cpu,                                                                                                         
-                    'transfer': 0                                                                                                                             
-                });                                                                                                                                           
-            });                                                                                                                                               
-                                                                                                                                                              
-            console.log("OK staked");                                                                                                                         
-            console.log(trx);                                                                                                                                 
-        }                                                                                                                                                     
-        catch (e) {                                                                                                                                           
-            console.log("Fail");                                                                                                                              
-            console.log(e);                                                                                                                                   
-        }                     
-        console.log("Account created, tx: ");
-        console.log(trx);
-	*/
+		const merkleTree = new MerkleTree(accounts_names);                                                                               
+      const merkleRootHex = merkleTree.getHexRoot();                                                                                   
+      const mProof = await merkleTree.getProof(accounts[1]);                                                                   
+                                                                                                                                       
+	  	try {                                                                                                                                                 
+			let trx = await contract.merklemint(accounts[0].name, Eos.modules.ecc.sha256(accounts[0].name), mProof);
+			console.log(trx);                                                                                                                                 
+	  	}                                                                                                                                                     
+	  	catch (e) {                                                                                                                                           
+			console.log("Fail");                                                                                                                              
+			console.log(e);                                                                                                                                   
+	  	}                     
 	}).catch(function(e) {
 		console.log(e);
 	});
