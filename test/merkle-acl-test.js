@@ -21,7 +21,8 @@ function makeid() {
 
 common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
     .then(async (app) => {
-		const node_url = 'https://frodo.eosnode.smartz.io:18888';
+		//const node_url = 'https://frodo.eosnode.smartz.io:18888';
+		const node_url = 'http://127.0.0.1:8888';
 		let N=10;
 		let accounts_names = [];
 		let accounts = [];
@@ -62,29 +63,30 @@ common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
         });
 
 		const account = await eos.newaccount({
-      		creator: "eosio",
+      		creator: "pril",
       		name: accounts[0].name,
       		owner: accounts[0].pub,
       		active: accounts[0].pub
     	});
 
 
-		let wasm = await fs.readFileSync('../build/contract.wast');
+		let wasm = await fs.readFileSync('../build/merkle-acl.wast');
 		if (typeof(wasm) == 'undefined') {
 			throw("Error reading .wast file");
 		};
 
-		let abi_json = await fs.readFileSync('../build/contract.abi');
+		let abi_json = await fs.readFileSync('../build/merkle-acl.abi');
 		if (typeof(abi_json) == 'undefined') {
 			throw("Error reading .abi file");
 		};
 
 		// [NOTE] HZ WTF?
 		abi = JSON.parse(abi_json);
-		abi.version = "eosio::abi/1.0";
+		// abi.version = "eosio::abi/1.0";
 
 		let contractUser = accounts[0].name;
 		let contractWif = accounts[0].priv;
+		let contractPub = accounts[0].pub;
 
 		let ceos = await Eos({
             chainId: getInfoResp.data.chain_id,
@@ -103,20 +105,24 @@ common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
 	
 		let contract = null;
 		await ceos.contract(contractUser).then(c => contract = c);
-		await(console.log("Created user '" + accounts[0].name + "' with pubkey: " + accounts[0].pub + ", set merkle contract"));
+		await(console.log("Created user '" + contractUser + "' with pubkey: " + contractPub + ", set merkle contract"));
 
-		const merkleTree = new MerkleTree(accounts_names);                                                                               
+		let merkleTree = new MerkleTree(accounts_names);                                                                               
       const merkleRootHex = merkleTree.getHexRoot();                                                                                   
-      const mProof = await merkleTree.getProof(accounts[1]);                                                                   
-                                                                                                                                       
-	  	try {                                                                                                                                                 
-			let trx = await contract.merklemint(accounts[0].name, Eos.modules.ecc.sha256(accounts[0].name), mProof);
+      const mProof = await merkleTree.getProof(accounts_names[1]);                                                                   
+		let hh = Buffer.from(Eos.modules.ecc.sha256(accounts_names[1]), "hex");
+		
+		//console.log(hh);
+		//console.log(mProof);
+
+		try {                                                                                                                                                 
+			let trx = await contract.merklemint(accounts_names[1], hh, mProof, {authorization: contractUser});
 			console.log(trx);                                                                                                                                 
 	  	}                                                                                                                                                     
 	  	catch (e) {                                                                                                                                           
 			console.log("Fail");                                                                                                                              
 			console.log(e);                                                                                                                                   
-	  	}                     
+	  	} 
 	}).catch(function(e) {
 		console.log(e);
 	});

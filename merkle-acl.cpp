@@ -18,17 +18,14 @@ class simpletoken : public eosio::contract {
 
       // @abi action
       void merklemint(account_name from, checksum256 acc_name_hash, std::vector<checksum256> merkle_proof) {
-			print("DISABLED AUTH!!!!");
       	//require_auth( from );
-			char *jopajopa="aaaaw";
-			// [ASK] check if not empty
-			// eosio_assert( merkle_proof.size() <= 255 );
-			uint8_t proof_size = merkle_proof.size();
-			checksum256 hz_root = traverse_merkle(acc_name_hash, merkle_proof);
-			if (memcmp(&hz_root, &_merkle_acl_root, sizeof(hz_root))) {
-				print(666);			
+			//eosio_assert( merkle_proof.size() <= 255 );
+			checksum256 hz_root = traversemerkle(acc_name_hash, merkle_proof);
+			if (memcmp(&hz_root, &_merkle_acl_root, sizeof(checksum256))) {
+				eosio::print("Account is ok");
+				return;
 			}
-			print(222);
+			eosio::print("Account is not ok");
   		}
 
       // @abi action
@@ -89,15 +86,15 @@ class simpletoken : public eosio::contract {
          }
       }
 
-	 	checksum256 traverse_merkle(checksum256 leaf, vector<checksum256> ids) {                                                                                                                 
-		 	eosio_assert(0 != ids.size(), "aaaaaaaaaaaaaaaaA");
+	 	checksum256 traversemerkle(checksum256 leaf, std::vector<checksum256> ids) {                                                                                                                 
+		 	//eosio_assert(0 != ids.size(), "aaaaaaaaaaaaaaaaA");
 
 		 	checksum256 cur = leaf;
-		 	char len = sizeof(leaf);
+		 	unsigned int len = sizeof(checksum256);
 		 	void *buf = malloc(2 * len);
-																																			
+																												
 		 	for (int i = 0; i < ids.size(); i++) {
-			 	if (memcmp(&ids[i], &cur, sizeof(ids[i])) < 0) {
+			 	if (memcmp(&ids[i], &cur, len) < 0) {
 				 	memcpy(&buf, &ids[i], len);
 				 	memcpy(&buf + len, &leaf, len);
 			 	} else {
