@@ -18,7 +18,8 @@ class simpletoken : public eosio::contract {
 
       // @abi action
       void merklemint(account_name from, checksum256 acc_name_hash, std::vector<checksum256> merkle_proof) {
-      	require_auth( from );
+			print("DISABLED AUTH!!!!");
+      	//require_auth( from );
 			char *jopajopa="aaaaw";
 			// [ASK] check if not empty
 			// eosio_assert( merkle_proof.size() <= 255 );
