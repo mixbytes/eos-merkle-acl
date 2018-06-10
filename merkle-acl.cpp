@@ -19,23 +19,32 @@ class simpletoken : public eosio::contract {
 
       // @abi action
       void merklemint(account_name from, checksum256 acc_name_hash, std::vector<checksum256> merkle_proof) {
+			// [FIXME] mocks
       	//require_auth( from );
 			//eosio_assert( merkle_proof.size() <= 255 );
 			checksum256 hz_root = traversemerkle(acc_name_hash, merkle_proof);
-			auto _merkle_acl_root = _mroots.get(N(mroot));
 
-			for (char i = 0; i < 32; i++) {
-				eosio::print((char)hz_root.hash[i]);
-			}
-			eosio::print("\n");
+
+			auto _merkle_acl_root = _mroots.get(N(mroot));
+			/*
 			for (char i = 0; i < 32; i++) {
 				eosio::print((char)_merkle_acl_root.mroot.hash[i]);
 			}
-			eosio::print("\n");
+			eosio::print("|");
+			for (char i = 0; i < 32; i++) {
+				eosio::print((char)hz_root.hash[i]);
+			}
+			eosio::print("|");
+			*/
+			
+
+
+			// [FIXME] fucking MAIN mock
+			hz_root = _merkle_acl_root.mroot;
 
 			if (memcmp(&hz_root, &_merkle_acl_root.mroot, sizeof(checksum256)) == 0) {
 				eosio::print("Account is ok, minted");
-				//issue(from, _merkle_issue_amount);
+				issue(from, _merkle_issue_amount);
 				return;
 			}
 			eosio::print("Account is not ok");
@@ -116,15 +125,18 @@ class simpletoken : public eosio::contract {
          }
       }
 		bool is_canonical_left(const checksum256& val) {
-			char check = val.hash[7];
-			if ((check & 0x80) == 0) {
+			checksum256 canonical_l = val;
+			// for(char i=0; i < 7; i++) {
+			//	canonical_l.hash[i] &= 0x00;
+			// } 
+			canonical_l.hash[7] &= 0x80;
+			if (canonical_l.hash[7] == 0) {
 				return true;
 			}
 			return false;                                                                                                                            
 		}                                                                                                                                                             
 																																																						  
 		checksum256 make_canonical_left(const checksum256& val) {                                                                                                     
-			return val;
 			checksum256 canonical_l = val;
 			for(char i=0; i < 7; i++) {
 				canonical_l.hash[i] &= 0xFF;
@@ -133,7 +145,7 @@ class simpletoken : public eosio::contract {
 			return canonical_l;                                                                                                                                        
 		}                                                                                                                                                             
 																																																						  
-		checksum256 make_canonical_right(const checksum256a& val) {                                                                                                    
+		checksum256 make_canonical_right(const checksum256& val) {                                                                                                    
 			checksum256 canonical_r = val;                                                                                                                             
 			for(char i=0; i < 7; i++) {
 				canonical_r.hash[i] |= 0x00;
@@ -142,7 +154,7 @@ class simpletoken : public eosio::contract {
 			return canonical_r;                                                                                                                                        
 		}     
 																																																								  
-   	char* make_canonical_pair(const checksum256& l, const checksum256& r) {
+   	inline char* make_canonical_pair(const checksum256& l, const checksum256& r) {
 		 	char len = sizeof(checksum256);
 			static char buf[sizeof(checksum256) * 2];
 			memcpy(&buf, &l, len);
@@ -150,12 +162,12 @@ class simpletoken : public eosio::contract {
 			return buf;
    	};
           
-	 	checksum256 traversemerkle(checksum256 leaf, std::vector<checksum256> ids) {
+	 	checksum256 traversemerkle(checksum256& leaf, std::vector<checksum256>& ids) {
 			checksum256 current = leaf;
 			unsigned char len = sizeof(checksum256);
  
 			for (checksum256& p: ids ) {
-      		if (is_canonical_left(p)) {
+      		if (!is_canonical_left(p)) {
          		sha256((char *)make_canonical_pair(p, current), len * 2, &current);
 					
       		} else {                                                                                                                                                

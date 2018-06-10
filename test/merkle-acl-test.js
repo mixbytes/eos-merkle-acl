@@ -119,8 +119,13 @@ common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
 		}
 		console.log("Split users, " + allowed_accounts.length + " allowed, " + not_allowed_accounts.length + " not allowed");
 
+
+		// [FIXME] MAIN place - this .js module is not compatible with proofs, made in libraries/chain/merkle.cpp
+		// replace with compatible one, rewrite .cpp implementation, or wait until EOS will include merkle methods 
+		// in WASM interface
+
 		let merkleTree = await new MerkleTree(allowed_accounts);
-		const merkleHexRoot = await merkleTree.getHexRoot();                                                                                   
+		const merkleHexRoot = await merkleTree.getHexRoot().substring(2);
 		const merkleRoot = merkleTree.getRoot();
 		try {                                                                                                                                                 
 			let trx = await contract.mrklsetprms({merkle_root: merkleRoot}, {authorization: contractUser});
@@ -133,7 +138,7 @@ common.run({name: 'Create merkle-acl contract', version: '0.0.1'})
 
 		for (let i=0; i< allowed_accounts.length; i++) {
 			let a = allowed_accounts[i];
-			let hh = Buffer.from(Eos.modules.ecc.sha256(a), "hex");
+			let hh = await Buffer.from(Eos.modules.ecc.sha256(a), "hex");
 			let mProof = await merkleTree.getProof(a);                                                                   
 			//console.log(a);
 			//console.log(hh);
