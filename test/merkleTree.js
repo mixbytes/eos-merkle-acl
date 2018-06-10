@@ -127,11 +127,11 @@ class MerkleTree {
       throw new Error('Array is not an array of buffers');
     }
 
-    return arr.map(el => '0x' + el.toString('hex'));
+    return arr.map(el => el.toString('hex'));
   }
 
   bufToHex(el) {
-  	return '0x' + el.toString('hex');
+  	return el.toString('hex');
   }
 
   sortAndConcat (...args) {
